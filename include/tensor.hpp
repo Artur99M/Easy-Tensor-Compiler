@@ -2,21 +2,22 @@
 #include <vector>
 #include <stdexcept>
 #include <cstdint>
+#include <string>
 
 namespace etc {
 
 class Tensor {
 
 private:
-    // std::uint16_t N_ = 1;
-    std::uint16_t C_ = 0,
-                  H_ = 0,
-                  W_ = 0;
+    // unsigned N_ = 1;
+    unsigned C_ = 0,
+             H_ = 0,
+             W_ = 0;
     std::vector<std::vector<std::vector<int>>> channels_;
 
 public:
     Tensor() = default;
-    Tensor(std::uint16_t C, std::uint16_t H, std::uint16_t W);
+    Tensor(unsigned C, unsigned H, unsigned W);
 
     //InputIt is iterartor of container contains of containers contain of containers contain types casts to int
     template <typename InputIt>
@@ -30,18 +31,18 @@ public:
 
 //element handing
 public:
-    inline      std::vector<std::vector<int>>&  operator[](std::uint16_t i) {
+    inline      std::vector<std::vector<int>>&  operator[](unsigned i) {
         return channels_[i];
     }
-    inline const std::vector<std::vector<int>>& operator[](std::uint16_t i) const {
+    inline const std::vector<std::vector<int>>& operator[](unsigned i) const {
         return channels_[i];
     }
-    inline      int&                            at        (std::uint16_t i, std::uint16_t j, std::uint16_t k) {
+    inline      int&                            at        (unsigned i, unsigned j, unsigned k) {
         if (i >= C_ || j >= H_ || k >= W_)
             throw std::out_of_range("in etc::Tensor::at");
         return channels_[i][j][k];
     }
-    inline const int&                           at        (std::uint16_t i, std::uint16_t j, std::uint16_t k) const {
+    inline const int&                           at        (unsigned i, unsigned j, unsigned k) const {
         if (i >= C_ || j >= H_ || k >= W_)
             throw std::out_of_range("in etc::Tensor::at");
         return channels_[i][j][k];
@@ -49,13 +50,13 @@ public:
 
 //size
 public:
-    inline std::uint16_t C() const {
+    inline unsigned C() const {
         return C_;
     }
-    inline std::uint16_t H() const {
+    inline unsigned H() const {
         return H_;
     }
-    inline std::uint16_t W() const {
+    inline unsigned W() const {
         return W_;
     }
 
@@ -65,21 +66,25 @@ public:
     Tensor  operator+ (const Tensor& rhs) const;
     Tensor& operator-=(const Tensor& rhs);
     Tensor  operator- (const Tensor& rhs) const;
-    // Tensor& operator*=(const Tensor& rhs);
-    // Tensor operator* (const Tensor& rhs) const;
-
+    Tensor& operator*=(const Tensor& rhs);
+    Tensor  operator* (const Tensor& rhs) const;
+    Tensor  transpose () const;
     Tensor& operator*=(const int rhs);
+
+    // functions outside the class
     // Tensor operator*(const Tensor& tensor, const int     number);
     // Tensor operator*(const int     number, const Tensor& tensor);
-    // functions outside the class
+    // Tensor scal_mul (const Tensor& lhs   , const Tensor& rhs);
 
 //Other methods
 public:
-    void set_size(std::uint16_t C, std::uint16_t H, std::uint16_t W);
+    void        set_size(unsigned C, unsigned H, unsigned W);
+    std::string dump    () const;
 };
 
 Tensor operator*(const Tensor& tensor, const int     number);
 Tensor operator*(const int     number, const Tensor& tensor);
+Tensor scal_mul (const Tensor& lhs   , const Tensor& rhs);
 
 
 } //namespace etc
