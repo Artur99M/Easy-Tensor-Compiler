@@ -22,7 +22,9 @@ public:
     virtual inline       bool        solved      () const = 0;
     virtual inline       bool        is_operation() const    ;
     virtual inline       bool        is_number   () const    ;
+    virtual inline       bool        is_input    () const    ;
     virtual              std::string dump        () const = 0;
+    virtual              std::string dump_quotes () const = 0;
 };
 
 //IWeight and InputData
@@ -36,6 +38,9 @@ public:
     const Tensor& evaluate() const override;
     inline bool   solved  () const override;
     std::string   dump    () const override;
+
+protected:
+    std::string dump_quotes() const override;
 };
 
 class InputData : public IWeight { //I wanted make equal classes, but it is necessary to do another names
@@ -44,6 +49,8 @@ public:
     ~InputData() override = default;
     std::string   dump    () const override;
 
+    inline bool   is_input() const override;
+    std::string dump_quotes() const override;
 };
 // using InputData = IWeight;
 
@@ -59,6 +66,7 @@ public:
     inline bool   solved   () const override;
     inline bool   is_number() const override;
     std::string   dump     () const override;
+    std::string dump_quotes() const override;
 };
 
 //IOperation
@@ -77,6 +85,7 @@ public:
     inline        bool                                solved      ()                                                const override    ;
     inline        bool                                is_operation()                                                const override    ;
                   std::string                         dump        ()                                                const override    ;
+                  std::string                         dump_quotes () const override;
 };
 
 //BinaryOperations
@@ -194,6 +203,14 @@ inline bool INode::is_number() const {
 }
 
 inline bool INumber::is_number() const {
+    return true;
+}
+
+inline bool INode::is_input() const {
+    return false;
+}
+
+inline bool InputData::is_input() const {
     return true;
 }
 

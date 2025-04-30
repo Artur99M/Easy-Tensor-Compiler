@@ -31,7 +31,16 @@ std::string IWeight::dump() const {
     return str.str();
 }
 
+std::string IWeight::dump_quotes() const {
+
+    return static_cast<const Tensor&>(*this).dump();
+}
+
 std::string InputData::dump() const {
+    return "INPUT";
+}
+
+std::string InputData::dump_quotes() const {
     return "INPUT";
 }
 //INumber
@@ -50,6 +59,13 @@ std::string INumber::dump() const {
     std::ostringstream str;
 
     str << '\"' << num_ << "\"\n";
+
+    return str.str();
+}
+std::string INumber::dump_quotes() const {
+    std::ostringstream str;
+
+    str << num_;
 
     return str.str();
 }
@@ -73,7 +89,37 @@ std::string IOperation::dump() const {
                 deq.push_back(std::make_pair(reinterpret_cast<const IOperation*>(i.get()), ++it));
                 str << '\"' << dynamic_cast<IOperation&>(*i).str_type() << '\n' << it << '\"' ;
             } else
-                str << i->dump();
+                str << '\"' << i->dump_quotes() << '\n' << ++it << '\"';
+
+            str << " -> \"" << front.first->str_type() << '\n' << front.second << "\"\n";
+        }
+        deq.pop_front();
+
+    }
+
+    str << '\"' << str_type() << '\n' << 0 << '\"';
+
+    return str.str();
+}
+
+std::string IOperation::dump_quotes() const {
+    std::ostringstream str;
+
+    //avoiding recursive calls
+    std::deque<std::pair<const IOperation*, size_t>> deq;
+    size_t it = 0;
+    deq.push_front(std::make_pair(this, it));
+
+    while (!deq.empty()) {
+        auto front = deq.front(); //copy for non invalidtion
+        auto vec = front.first->getArgs();
+
+        for (auto& i : vec) {
+            if (i->is_operation()) {
+                deq.push_back(std::make_pair(reinterpret_cast<const IOperation*>(i.get()), ++it));
+                str << '\"' << dynamic_cast<IOperation&>(*i).str_type() << '\n' << it << '\"' ;
+            } else
+                str << i->dump_quotes();
 
             str << " -> \"" << front.first->str_type() << '\n' << front.second << "\"\n";
         }
