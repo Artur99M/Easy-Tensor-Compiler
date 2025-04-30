@@ -12,11 +12,13 @@ namespace etc {
 
 const std::shared_ptr<IOperation>& NeuralNetwork::addOp(const std::shared_ptr<IOperation>& op) {
 
+    //infer_ can't be empty
     if (infer_ == nullptr) {
         infer_ = op;
         return op;
     }
 
+    // if infer_ is one of args => infer_ should be changed
     for (auto& i : op->getArgs())
         if (i == infer_) {
             infer_ = op;

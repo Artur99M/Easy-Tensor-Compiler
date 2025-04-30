@@ -7,17 +7,6 @@
 
 namespace etc {
 
-//      ___________    ________________     ___________        ___________
-//    //           \\  ________________   //           \\    //           \\
-//   //                       ||         //             \\  ||             ||
-//  ||                        ||        ||               || ||             ||
-//  ||                        ||        ||               || ||____________//
-//  ||                        ||        ||               || ||        \\
-//  ||                        ||        ||               || ||          \\
-//   \\                       ||         \\             //  ||           \\
-//    \\___________//         ||          \\___________//   ||            \\
-
-
 Tensor::Tensor(const unsigned N, const unsigned C, const unsigned H, const unsigned W) :
     N_(N), C_(C), H_(H), W_(W), data_(N_ * C_ * H_ * W_) {
 }
@@ -61,18 +50,6 @@ Tensor& Tensor::operator=(Tensor&& rhs) {
 
     return *this;
 }
-
-
-//    _           _         _______     ________________
-//  // \\       // \\     //       \\   ________________ ||             ||
-// ||   \\     //   ||   //         \\         ||        ||             ||
-// ||    \\   //    ||  //           \\        ||        ||             ||
-// ||     \\_//     || ||             ||       ||        ||             ||
-// ||               || ||_____________||       ||        ||_____________||
-// ||               || ||             ||       ||        ||             ||
-// ||               || ||             ||       ||        ||             ||
-// ||               || ||             ||       ||        ||             ||
-
 
 Tensor& Tensor::operator+=(const Tensor& rhs) {
     if (N_ != rhs.N_ || C_ != rhs.C_ || H_ != rhs.H_ || W_ != rhs.W_)
@@ -137,6 +114,7 @@ Tensor Tensor::operator*(const Tensor& rhs) const {
         throw std::logic_error("etc::Tensor::operator*(const Tensor&) can\'t mul");
 
     Tensor res{N_, C_, H_, rhs.W_},
+    //avoiding missing cacheline
            T_rhs = rhs.transpose();
 
     for (unsigned b = 0; b < N_; ++b) {
@@ -184,6 +162,7 @@ Tensor convol(const Tensor& lhs, const Tensor& rhs) {
 
     Tensor res {N, C, Hl - Hr + 1, Wl - Wr + 1};
 
+    //using definition
     for (unsigned b = 0; b < N; ++b)
         for (unsigned c = 0; c < C; ++c)
             for (unsigned i = 0; i < Hl - Hr + 1; ++i)
@@ -283,6 +262,7 @@ std::string Tensor::dump() const {
 
 std::string Tensor::dump_init() const {
 
+    //dump in initializer_list
     std::ostringstream str;
     for (unsigned b = 0; b < N_ - 1; ++b) {
         str << "{\n";
@@ -385,7 +365,7 @@ std::string Tensor::dump_init() const {
 
 
 void Tensor::set_size(const unsigned N, const unsigned C, const unsigned H, const unsigned W) {
-    data_.resize(N * C * H * W);
+    data_.resize(N * C * H * W); // it's first for throwing exceptions
     N_ = N;
     C_ = C;
     H_ = H;

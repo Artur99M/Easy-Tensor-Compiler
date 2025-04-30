@@ -59,6 +59,7 @@ std::string INumber::dump() const {
 std::string IOperation::dump() const {
     std::ostringstream str;
 
+    //avoiding recursive calls
     std::deque<std::pair<const IOperation*, size_t>> deq;
     size_t it = 0;
     deq.push_front(std::make_pair(this, it));
