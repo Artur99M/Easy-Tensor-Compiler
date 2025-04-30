@@ -4,11 +4,6 @@ namespace Artyr99M {
 #ifdef NDEBUG
 std::ostream& debug = std::cerr;
 #else
-// template <typename T>
-// debuging& debuging::operator<<(const T x) {
-//     return *this;
-// }
-
 debuging& debuging::operator<<(std::basic_ostream<char, std::char_traits<char>>& (*func)(std::basic_ostream<char, std::char_traits<char>>&)) {
     return *this;
 }

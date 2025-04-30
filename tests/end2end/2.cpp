@@ -1,16 +1,10 @@
-#include "nn_node.hpp"
-#include "tensor.hpp"
 #include <iostream>
-#include <string>
+#include <memory>
 #include "neural_network.hpp"
-#include <typeinfo>
-#include <unordered_set>
 
-using namespace etc;
 
-int main(int argc, char* argv[]) {
-    std::unordered_set<std::string> att{argv, argv + argc};
-    Tensor input = {
+int main() {
+    etc::Tensor input = {
                {
                {
                {1, 2},
@@ -33,7 +27,7 @@ int main(int argc, char* argv[]) {
                }
                };
 
-    Tensor weight = {
+    etc::Tensor weight = {
                {
                {
                {-4, -3},
@@ -55,20 +49,18 @@ int main(int argc, char* argv[]) {
                }
                }
                };
+    etc::Tensor weight2 = {
+                    {{{1}}, {{1}}},
+                    {{{1}}, {{1}}}
+                    };
 
-    NeuralNetwork nn;
+    etc::NeuralNetwork nn;
 
-    const auto& input_data = std::make_shared<InputData>(input);
+    const auto& input_data = std::make_shared<etc::InputData>(input);
+    nn.addOp(std::make_shared<etc::ConvolOperation>(input_data, weight));
+    nn.addOp(std::make_shared<etc::ScalarAddOperation>(nn.infer_node(), weight2));
+    nn.addOp(std::make_shared<etc::ScalarMulOperation>(nn.infer_node(), 12));
 
-    std::cout << "input:\n\n" << input.dump();
-    std::shared_ptr<INode> cur = nn.addOp(std::make_shared<ConvolOperation>(input_data, weight));
-    cur = nn.addOp(std::make_shared<SoftmaxOperation>(cur));
-    nn.addOp(std::make_shared<ScalarMulOperation>(cur, 2));
-    std::cout << "\n\noutput:\n\n" << nn.infer().dump();
-    nn.infer();
-
-    if (att.find("-G") != att.end()) {
-        std::cout << nn.dump_graph();
-
-    }
+    std::cout << nn.infer().dump_init();
+    std::cerr << nn.dump_graph();
 }

@@ -1,7 +1,10 @@
 #include "tensor.hpp"
+#include "nn_node.hpp"
 #include <gtest/gtest.h>
 #include <vector>
 #include <algorithm>
+#include <typeinfo>
+#include "neural_network.hpp"
 
 using namespace etc;
 
@@ -591,3 +594,919 @@ TEST(TesorTest, Convol) {
 
 
 }
+
+TEST(TestTensor, softmax) {
+
+    Tensor x = {
+               {
+               {
+               {1, 2},
+               {3, 4}
+               },
+               {
+               {5, 6},
+               {7, 8}
+               }
+               },
+               {
+               {
+               {9, 10},
+               {11, 12}
+               },
+               {
+               {13, 14},
+               {15, 16}
+               }
+               }
+               };
+
+    x.softmax_self();
+    std::cout << x.dump();
+
+    Tensor y =
+    {
+        {   // Batch 0
+            {   // Channel 0
+                {0.01798620996209156, 0.01798620996209156},
+                {0.01798620996209156, 0.01798620996209156}
+            },
+            {   // Channel 1
+                {0.9820137900379085, 0.9820137900379085},
+                {0.9820137900379085, 0.9820137900379085}
+            }
+        },
+        {   // Batch 1
+            {   // Channel 0
+                {0.01798620996209156, 0.01798620996209156},
+                {0.01798620996209156, 0.01798620996209156}
+            },
+            {   // Channel 1
+                {0.9820137900379085, 0.9820137900379085},
+                {0.9820137900379085, 0.9820137900379085}
+            }
+        }
+    };
+
+    EXPECT_EQ(x, y);
+}
+
+TEST(TestNode, evaluateScalarAddOperation) {
+
+    Tensor x = {
+               {
+               {
+               {1, 2},
+               {3, 4}
+               },
+               {
+               {5, 6},
+               {7, 8}
+               }
+               },
+               {
+               {
+               {9, 10},
+               {11, 12}
+               },
+               {
+               {13, 14},
+               {15, 16}
+               }
+               }
+               };
+
+    Tensor y = {
+               {
+               {
+               {-4, -3},
+               {2, 1}
+               },
+               {
+               {-8, -7},
+               {6, 5}
+               }
+               },
+               {
+               {
+               {-12, -11},
+               {10, 9}
+               },
+               {
+               {-16, -15},
+               {14, 13}
+               }
+               }
+               };
+
+    std::shared_ptr<IWeight> xdata = std::make_shared<IWeight>(x),
+                             ydata = std::make_shared<IWeight>(y);
+
+
+    std::shared_ptr<INode> res = std::make_shared<ScalarAddOperation>(xdata, ydata);
+
+    EXPECT_TRUE(res->is_operation());
+    EXPECT_FALSE(res->solved());
+    EXPECT_EQ(res->evaluate(), x + y);
+    EXPECT_TRUE(res->solved());
+
+}
+
+TEST(TestNode, evaluateScalarSubOperation) {
+
+    Tensor x = {
+               {
+               {
+               {1, 2},
+               {3, 4}
+               },
+               {
+               {5, 6},
+               {7, 8}
+               }
+               },
+               {
+               {
+               {9, 10},
+               {11, 12}
+               },
+               {
+               {13, 14},
+               {15, 16}
+               }
+               }
+               };
+
+    Tensor y = {
+               {
+               {
+               {-4, -3},
+               {2, 1}
+               },
+               {
+               {-8, -7},
+               {6, 5}
+               }
+               },
+               {
+               {
+               {-12, -11},
+               {10, 9}
+               },
+               {
+               {-16, -15},
+               {14, 13}
+               }
+               }
+               };
+
+    std::shared_ptr<IWeight> xdata = std::make_shared<IWeight>(x),
+                             ydata = std::make_shared<IWeight>(y);
+
+
+    std::shared_ptr<INode> res = std::make_shared<ScalarSubOperation>(xdata, ydata);
+
+    EXPECT_TRUE(res->is_operation());
+    EXPECT_FALSE(res->solved());
+    EXPECT_EQ(res->evaluate(), x - y);
+    EXPECT_TRUE(res->solved());
+
+}
+
+TEST(TestNode, evaluateMatMulOperation) {
+
+    Tensor x = {
+               {
+               {
+               {1, 2},
+               {3, 4}
+               },
+               {
+               {5, 6},
+               {7, 8}
+               }
+               },
+               {
+               {
+               {9, 10},
+               {11, 12}
+               },
+               {
+               {13, 14},
+               {15, 16}
+               }
+               }
+               };
+
+    Tensor y = {
+               {
+               {
+               {-4, -3},
+               {2, 1}
+               },
+               {
+               {-8, -7},
+               {6, 5}
+               }
+               },
+               {
+               {
+               {-12, -11},
+               {10, 9}
+               },
+               {
+               {-16, -15},
+               {14, 13}
+               }
+               }
+               };
+
+    std::shared_ptr<IWeight> xdata = std::make_shared<IWeight>(x),
+                             ydata = std::make_shared<IWeight>(y);
+
+
+    std::shared_ptr<INode> res = std::make_shared<MatMulOperation>(xdata, ydata);
+
+    EXPECT_TRUE(res->is_operation());
+    EXPECT_FALSE(res->solved());
+    EXPECT_EQ(res->evaluate(), x * y);
+    EXPECT_TRUE(res->solved());
+
+}
+
+TEST(TestNode, evaluateScalarMulOperation) {
+
+    Tensor x = {
+               {
+               {
+               {1, 2},
+               {3, 4}
+               },
+               {
+               {5, 6},
+               {7, 8}
+               }
+               },
+               {
+               {
+               {9, 10},
+               {11, 12}
+               },
+               {
+               {13, 14},
+               {15, 16}
+               }
+               }
+               };
+
+    std::shared_ptr<IWeight> xdata = std::make_shared<IWeight>(x);
+
+
+    std::shared_ptr<INode> res = std::make_shared<ScalarMulOperation>(xdata, 2);
+
+    EXPECT_TRUE(res->is_operation());
+    EXPECT_FALSE(res->solved());
+    EXPECT_EQ(res->evaluate(), x * 2);
+    EXPECT_TRUE(res->solved());
+
+}
+
+TEST(TestNode, evaluateConvolOperation) {
+
+    Tensor x = {
+               {
+               {
+               {1, 2},
+               {3, 4}
+               },
+               {
+               {5, 6},
+               {7, 8}
+               }
+               },
+               {
+               {
+               {9, 10},
+               {11, 12}
+               },
+               {
+               {13, 14},
+               {15, 16}
+               }
+               }
+               };
+
+    Tensor y = {
+               {
+               {
+               {-4, -3},
+               {2, 1}
+               },
+               {
+               {-8, -7},
+               {6, 5}
+               }
+               },
+               {
+               {
+               {-12, -11},
+               {10, 9}
+               },
+               {
+               {-16, -15},
+               {14, 13}
+               }
+               }
+               };
+
+    std::shared_ptr<IWeight> xdata = std::make_shared<IWeight>(x),
+                             ydata = std::make_shared<IWeight>(y);
+
+
+    std::shared_ptr<INode> res = std::make_shared<ConvolOperation>(xdata, ydata);
+
+    EXPECT_TRUE(res->is_operation());
+    EXPECT_FALSE(res->solved());
+    EXPECT_EQ(res->evaluate(), convol(x, y));
+    EXPECT_TRUE(res->solved());
+
+}
+
+TEST(TestNode, evaluateReLUOperation) {
+
+    Tensor x = {
+               {
+               {
+               {1, 2},
+               {3, 4}
+               },
+               {
+               {5, 6},
+               {7, 8}
+               }
+               },
+               {
+               {
+               {9, 10},
+               {11, 12}
+               },
+               {
+               {13, 14},
+               {15, 16}
+               }
+               }
+               };
+
+    std::shared_ptr<IWeight> xdata = std::make_shared<IWeight>(x);
+
+
+    std::shared_ptr<INode> res = std::make_shared<ReLUOperation>(xdata);
+
+    EXPECT_TRUE(res->is_operation());
+    EXPECT_FALSE(res->solved());
+    EXPECT_EQ(res->evaluate(), x.ReLU());
+    EXPECT_TRUE(res->solved());
+
+}
+
+TEST(TestNode, evaluateSoftmaxOperation) {
+
+    Tensor x = {
+               {
+               {
+               {1, 2},
+               {3, 4}
+               },
+               {
+               {5, 6},
+               {7, 8}
+               }
+               },
+               {
+               {
+               {9, 10},
+               {11, 12}
+               },
+               {
+               {13, 14},
+               {15, 16}
+               }
+               }
+               };
+
+    std::shared_ptr<IWeight> xdata = std::make_shared<IWeight>(x);
+
+
+    std::shared_ptr<INode> res = std::make_shared<SoftmaxOperation>(xdata);
+
+    EXPECT_TRUE(res->is_operation());
+    EXPECT_FALSE(res->solved());
+    EXPECT_EQ(res->evaluate(), x.softmax());
+    EXPECT_TRUE(res->solved());
+
+}
+
+TEST(TestNode, evaluateIWeight) {
+
+    Tensor x = {
+               {
+               {
+               {1, 2},
+               {3, 4}
+               },
+               {
+               {5, 6},
+               {7, 8}
+               }
+               },
+               {
+               {
+               {9, 10},
+               {11, 12}
+               },
+               {
+               {13, 14},
+               {15, 16}
+               }
+               }
+               };
+
+    std::shared_ptr<INode> res = std::make_shared<IWeight>(x);
+
+    EXPECT_FALSE(res->is_operation());
+    EXPECT_TRUE(res->solved());
+    EXPECT_EQ(res->evaluate(), x);
+    EXPECT_TRUE(res->solved());
+
+}
+
+TEST(TestNode, evaluateInputData) {
+
+    Tensor x = {
+               {
+               {
+               {1, 2},
+               {3, 4}
+               },
+               {
+               {5, 6},
+               {7, 8}
+               }
+               },
+               {
+               {
+               {9, 10},
+               {11, 12}
+               },
+               {
+               {13, 14},
+               {15, 16}
+               }
+               }
+               };
+
+    std::shared_ptr<INode> res = std::make_shared<InputData>(x);
+
+    EXPECT_FALSE(res->is_operation());
+    EXPECT_TRUE(res->solved());
+    EXPECT_EQ(res->evaluate(), x);
+    EXPECT_TRUE(res->solved());
+
+}
+
+TEST(TestNode, evaluateINumber) {
+
+    std::shared_ptr<INode> res = std::make_shared<INumber>(2);
+
+    EXPECT_FALSE(res->is_operation());
+    EXPECT_TRUE(res->solved());
+    EXPECT_THROW(res->evaluate(), std::logic_error);
+    EXPECT_TRUE(res->solved());
+    EXPECT_EQ(dynamic_cast<INumber&>(*res).val(), 2);
+
+}
+
+
+TEST(TestTree, MakeTree1) {
+
+    Tensor x = {
+               {
+               {
+               {1, 2},
+               {3, 4}
+               },
+               {
+               {5, 6},
+               {7, 8}
+               }
+               },
+               {
+               {
+               {9, 10},
+               {11, 12}
+               },
+               {
+               {13, 14},
+               {15, 16}
+               }
+               }
+               };
+    std::shared_ptr<INode> node1 = std::make_shared<IWeight>(x),
+                           node2 = std::make_shared<InputData>(x),
+
+    node3 = std::make_shared<ScalarAddOperation>(node1, node1),
+    node4 = std::make_shared<ScalarMulOperation>(node2, 2);
+
+    std::shared_ptr<INode> root = std::make_shared<ScalarSubOperation>(node3, node4);
+
+    IOperation& rootl = dynamic_cast<IOperation&>(*root);
+    std::vector<std::shared_ptr<INode>> rootl_vec = rootl.getArgs();
+    EXPECT_EQ(rootl_vec.size(), 2);
+    EXPECT_EQ(rootl_vec[0], node3);
+    EXPECT_EQ(rootl_vec[1], node4);
+
+    IOperation& node3l = dynamic_cast<IOperation&>(*node3);
+    std::vector<std::shared_ptr<INode>> node3l_vec = node3l.getArgs();
+    EXPECT_EQ(node3l_vec.size(), 2);
+    EXPECT_EQ(node3l_vec[0], node1);
+    EXPECT_EQ(node3l_vec[1], node1);
+
+    IOperation& node4l = dynamic_cast<IOperation&>(*node4);
+    std::vector<std::shared_ptr<INode>> node4l_vec = node4l.getArgs();
+    EXPECT_EQ(node4l_vec.size(), 2);
+    EXPECT_EQ(node4l_vec[0], node2);
+    EXPECT_EQ(typeid(*(node4l_vec[1])), typeid(INumber));
+    EXPECT_EQ(dynamic_cast<INumber&>(*(node4l_vec[1])).val(), 2);
+
+}
+
+TEST(TestTree, MakeTree2) {
+
+    Tensor x = {
+               {
+               {
+               {1, 2},
+               {3, 4}
+               },
+               {
+               {5, 6},
+               {7, 8}
+               }
+               },
+               {
+               {
+               {9, 10},
+               {11, 12}
+               },
+               {
+               {13, 14},
+               {15, 16}
+               }
+               }
+               };
+    std::shared_ptr<INode> node1 = std::make_shared<IWeight>(x),
+                           node2 = std::make_shared<InputData>(x),
+                           node3 = std::make_shared<IWeight>(x),
+
+    node4 = std::make_shared<MatMulOperation>(node1, node2),
+    node5 = std::make_shared<ConvolOperation>(node4, node3);
+
+    std::shared_ptr<INode> root = std::make_shared<SoftmaxOperation>(node5);
+
+    IOperation& rootl = dynamic_cast<IOperation&>(*root);
+    std::vector<std::shared_ptr<INode>> rootl_vec = rootl.getArgs();
+    EXPECT_EQ(rootl_vec.size(), 1);
+    EXPECT_EQ(rootl_vec[0], node5);
+    EXPECT_EQ(typeid(rootl), typeid(SoftmaxOperation));
+
+    IOperation& node5l = dynamic_cast<IOperation&>(*node5);
+    std::vector<std::shared_ptr<INode>> node5l_vec = node5l.getArgs();
+    EXPECT_EQ(node5l_vec.size(), 2);
+    EXPECT_EQ(node5l_vec[0], node4);
+    EXPECT_EQ(node5l_vec[1], node3);
+    EXPECT_EQ(typeid(node5l), typeid(ConvolOperation));
+
+    EXPECT_EQ(typeid(*node3), typeid(IWeight));
+
+    IOperation& node4l = dynamic_cast<IOperation&>(*node4);
+    std::vector<std::shared_ptr<INode>> node4l_vec = node4l.getArgs();
+    EXPECT_EQ(node4l_vec.size(), 2);
+    EXPECT_EQ(node4l_vec[0], node1);
+    EXPECT_EQ(node4l_vec[1], node2);
+    EXPECT_EQ(typeid(node4l), typeid(MatMulOperation));
+
+    EXPECT_EQ(typeid(*node1), typeid(IWeight));
+
+    EXPECT_EQ(typeid(*node2), typeid(InputData));
+
+}
+
+TEST(TestTree, MakeTree3) {
+
+    Tensor x = {
+               {
+               {
+               {1, 2},
+               {3, 4}
+               },
+               {
+               {5, 6},
+               {7, 8}
+               }
+               },
+               {
+               {
+               {9, 10},
+               {11, 12}
+               },
+               {
+               {13, 14},
+               {15, 16}
+               }
+               }
+               };
+    std::shared_ptr<INode> node1 = std::make_shared<IWeight>(x),
+                           node2 = std::make_shared<InputData>(x),
+                           node3 = std::make_shared<IWeight>(x),
+
+    node4 = std::make_shared<MatMulOperation>(node1, node2),
+    node5 = std::make_shared<ConvolOperation>(node4, node3);
+
+    std::shared_ptr<INode> root = std::make_shared<SoftmaxOperation>(node5);
+
+    IOperation& rootl = dynamic_cast<IOperation&>(*root);
+    std::vector<std::shared_ptr<INode>> rootl_vec = rootl.getArgs();
+    EXPECT_EQ(rootl_vec.size(), 1);
+    EXPECT_EQ(rootl_vec[0], node5);
+    EXPECT_EQ(typeid(rootl), typeid(SoftmaxOperation));
+
+    IOperation& node5l = dynamic_cast<IOperation&>(*node5);
+    std::vector<std::shared_ptr<INode>> node5l_vec = node5l.getArgs();
+    EXPECT_EQ(node5l_vec.size(), 2);
+    EXPECT_EQ(node5l_vec[0], node4);
+    EXPECT_EQ(node5l_vec[1], node3);
+    EXPECT_EQ(typeid(node5l), typeid(ConvolOperation));
+
+    EXPECT_EQ(typeid(*node3), typeid(IWeight));
+
+    IOperation& node4l = dynamic_cast<IOperation&>(*node4);
+    std::vector<std::shared_ptr<INode>> node4l_vec = node4l.getArgs();
+    EXPECT_EQ(node4l_vec.size(), 2);
+    EXPECT_EQ(node4l_vec[0], node1);
+    EXPECT_EQ(node4l_vec[1], node2);
+    EXPECT_EQ(typeid(node4l), typeid(MatMulOperation));
+
+    EXPECT_EQ(typeid(*node1), typeid(IWeight));
+
+    EXPECT_EQ(typeid(*node2), typeid(InputData));
+
+}
+
+TEST(TestTree, MakeTree4) {
+
+    Tensor x = {
+               {
+               {
+               {1, 2},
+               {3, 4}
+               },
+               {
+               {5, 6},
+               {7, 8}
+               }
+               },
+               {
+               {
+               {9, 10},
+               {11, 12}
+               },
+               {
+               {13, 14},
+               {15, 16}
+               }
+               }
+               };
+    std::shared_ptr<INode> node1 = std::make_shared<IWeight>(x),
+                           node2 = std::make_shared<InputData>(x),
+                           node3 = std::make_shared<IWeight>(x),
+                           node4 = std::make_shared<InputData>(x),
+
+    node5 = std::make_shared<MatMulOperation>(node1, node2),
+    node6 = std::make_shared<ConvolOperation>(node4, node3),
+    node7 = std::make_shared<ReLUOperation>(node5),
+    node8 = std::make_shared<ScalarMulOperation>(node6, 7);
+
+    EXPECT_EQ(typeid(*node1), typeid(IWeight));
+    EXPECT_EQ(typeid(*node2), typeid(InputData));
+    EXPECT_EQ(typeid(*node3), typeid(IWeight));
+    EXPECT_EQ(typeid(*node4), typeid(InputData));
+
+    std::shared_ptr<INode> root = std::make_shared<ScalarSubOperation>(node8, node7);
+
+    IOperation& rootl = dynamic_cast<IOperation&>(*root);
+    std::vector<std::shared_ptr<INode>> rootl_vec = rootl.getArgs();
+    EXPECT_EQ(rootl_vec.size(), 2);
+    EXPECT_EQ(rootl_vec[0], node8);
+    EXPECT_EQ(rootl_vec[1], node7);
+    EXPECT_EQ(typeid(rootl), typeid(ScalarSubOperation));
+
+    IOperation& node8l = dynamic_cast<IOperation&>(*node8);
+    std::vector<std::shared_ptr<INode>> node8l_vec = node8l.getArgs();
+    EXPECT_EQ(node8l_vec.size(), 2);
+    EXPECT_EQ(node8l_vec[0], node6);
+    EXPECT_EQ(typeid(*(node8l_vec[1])), typeid(INumber));
+    EXPECT_EQ(dynamic_cast<INumber&>(*(node8l_vec[1])).val(), 7);
+    EXPECT_EQ(typeid(node8l), typeid(ScalarMulOperation));
+
+    IOperation& node7l = dynamic_cast<IOperation&>(*node7);
+    std::vector<std::shared_ptr<INode>> node7l_vec = node7l.getArgs();
+    EXPECT_EQ(node7l_vec.size(), 1);
+    EXPECT_EQ(node7l_vec[0], node5);
+    EXPECT_EQ(typeid(node7l), typeid(ReLUOperation));
+
+    IOperation& node5l = dynamic_cast<IOperation&>(*node5);
+    std::vector<std::shared_ptr<INode>> node5l_vec = node5l.getArgs();
+    EXPECT_EQ(node5l_vec.size(), 2);
+    EXPECT_EQ(node5l_vec[0], node1);
+    EXPECT_EQ(node5l_vec[1], node2);
+    EXPECT_EQ(typeid(node5l), typeid(MatMulOperation));
+
+    IOperation& node6l = dynamic_cast<IOperation&>(*node6);
+    std::vector<std::shared_ptr<INode>> node6l_vec = node6l.getArgs();
+    EXPECT_EQ(node6l_vec.size(), 2);
+    EXPECT_EQ(node6l_vec[0], node4);
+    EXPECT_EQ(node6l_vec[1], node3);
+    EXPECT_EQ(typeid(node6l), typeid(ConvolOperation));
+}
+
+TEST(TestNN, RightTree) {
+    NeuralNetwork nn;
+
+    Tensor x = {
+               {
+               {
+               {1, 2},
+               {3, 4}
+               },
+               {
+               {5, 6},
+               {7, 8}
+               }
+               },
+               {
+               {
+               {9, 10},
+               {11, 12}
+               },
+               {
+               {13, 14},
+               {15, 16}
+               }
+               }
+               };
+    std::shared_ptr<INode> node1 = std::make_shared<IWeight>(x),
+                           node2 = std::make_shared<InputData>(x),
+                           node3 = std::make_shared<IWeight>(x),
+                           node4 = std::make_shared<InputData>(x),
+
+    node5 = nn.addOp(std::make_shared<MatMulOperation>(node1, x)),
+    node6 = nn.addOp(std::make_shared<ConvolOperation>(x, node3)),
+    node7 = nn.addOp(std::make_shared<ReLUOperation>(node5)),
+    node8 = nn.addOp(std::make_shared<ScalarMulOperation>(node6, 7));
+
+    EXPECT_EQ(typeid(*node1), typeid(IWeight));
+    EXPECT_EQ(typeid(*node2), typeid(InputData));
+    EXPECT_EQ(typeid(*node3), typeid(IWeight));
+    EXPECT_EQ(typeid(*node4), typeid(InputData));
+
+    std::shared_ptr<INode> root = nn.addOp(std::make_shared<ScalarSubOperation>(node8, node7));
+    root = nn.infer_node();
+
+
+    IOperation& rootl = dynamic_cast<IOperation&>(*root);
+    std::vector<std::shared_ptr<INode>> rootl_vec = rootl.getArgs();
+    EXPECT_EQ(rootl_vec.size(), 2);
+    EXPECT_EQ(rootl_vec[0], node8);
+    EXPECT_EQ(rootl_vec[1], node7);
+    EXPECT_EQ(typeid(rootl), typeid(ScalarSubOperation));
+
+    IOperation& node8l = dynamic_cast<IOperation&>(*node8);
+    std::vector<std::shared_ptr<INode>> node8l_vec = node8l.getArgs();
+    EXPECT_EQ(node8l_vec.size(), 2);
+    EXPECT_EQ(node8l_vec[0], node6);
+    EXPECT_EQ(typeid(*(node8l_vec[1])), typeid(INumber));
+    EXPECT_EQ(dynamic_cast<INumber&>(*(node8l_vec[1])).val(), 7);
+    EXPECT_EQ(typeid(node8l), typeid(ScalarMulOperation));
+
+    IOperation& node7l = dynamic_cast<IOperation&>(*node7);
+    std::vector<std::shared_ptr<INode>> node7l_vec = node7l.getArgs();
+    EXPECT_EQ(node7l_vec.size(), 1);
+    EXPECT_EQ(node7l_vec[0], node5);
+    EXPECT_EQ(typeid(node7l), typeid(ReLUOperation));
+
+    IOperation& node5l = dynamic_cast<IOperation&>(*node5);
+    std::vector<std::shared_ptr<INode>> node5l_vec = node5l.getArgs();
+    EXPECT_EQ(node5l_vec.size(), 2);
+    EXPECT_EQ(node5l_vec[0], node1);
+    EXPECT_EQ(typeid(*(node5l_vec[1])), typeid(IWeight));
+    EXPECT_EQ(node5l_vec[1]->evaluate(), x);
+    EXPECT_EQ(typeid(node5l), typeid(MatMulOperation));
+
+    IOperation& node6l = dynamic_cast<IOperation&>(*node6);
+    std::vector<std::shared_ptr<INode>> node6l_vec = node6l.getArgs();
+    EXPECT_EQ(node6l_vec.size(), 2);
+    EXPECT_EQ(typeid(*(node6l_vec[0])), typeid(IWeight));
+    EXPECT_EQ(node6l_vec[1]->evaluate(), x);
+    EXPECT_EQ(node6l_vec[1], node3);
+    EXPECT_EQ(typeid(node6l), typeid(ConvolOperation));
+}
+//
+// TEST(TestNN, RightTreeWithInfer) {
+//     NeuralNetwork nn;
+//
+//     Tensor x = {
+//                {
+//                {
+//                {1, 2},
+//                {3, 4}
+//                },
+//                {
+//                {5, 6},
+//                {7, 8}
+//                }
+//                },
+//                {
+//                {
+//                {9, 10},
+//                {11, 12}
+//                },
+//                {
+//                {13, 14},
+//                {15, 16}
+//                }
+//                }
+//                };
+//     std::shared_ptr<INode> node1 = std::make_shared<IWeight>(x),
+//                            node2 = std::make_shared<InputData>(x),
+//                            node3 = std::make_shared<IWeight>(x),
+//                            node4 = std::make_shared<InputData>(x),
+//
+//     node5 = nn.addOp(std::make_shared<MatMulOperation>(node1, x)),
+//     node6 = nn.addOp(std::make_shared<ConvolOperation>(x, node3)),
+//     node7 = nn.addOp(std::make_shared<ReLUOperation>(node5)),
+//     node8 = nn.addOp(std::make_shared<ScalarMulOperation>(node6, 7)),
+//     node9 = nn.addOp(std::make_shared<MatMulOperation>(node5, nn.infer_node()));
+//
+//     EXPECT_EQ(typeid(*node1), typeid(IWeight));
+//     EXPECT_EQ(typeid(*node2), typeid(InputData));
+//     EXPECT_EQ(typeid(*node3), typeid(IWeight));
+//     EXPECT_EQ(typeid(*node4), typeid(InputData));
+//
+//     std::shared_ptr<INode> root = nn.addOp(std::make_shared<ScalarSubOperation>(node8, node7));
+//     root = nn.infer_node();
+//
+//
+//     IOperation& rootl = dynamic_cast<IOperation&>(*root);
+//     std::vector<std::shared_ptr<INode>> rootl_vec = rootl.getArgs();
+//     EXPECT_EQ(rootl_vec.size(), 2);
+//     EXPECT_EQ(rootl_vec[0], node8);
+//     EXPECT_EQ(rootl_vec[1], node7);
+//     EXPECT_EQ(typeid(rootl), typeid(ScalarSubOperation));
+//
+//     IOperation& node8l = dynamic_cast<IOperation&>(*node8);
+//     std::vector<std::shared_ptr<INode>> node8l_vec = node8l.getArgs();
+//     EXPECT_EQ(node8l_vec.size(), 2);
+//     EXPECT_EQ(node8l_vec[0], node6);
+//     EXPECT_EQ(typeid(*(node8l_vec[1])), typeid(INumber));
+//     EXPECT_EQ(dynamic_cast<INumber&>(*(node8l_vec[1])).val(), 7);
+//     EXPECT_EQ(typeid(node8l), typeid(ScalarMulOperation));
+//
+//     IOperation& node7l = dynamic_cast<IOperation&>(*node7);
+//     std::vector<std::shared_ptr<INode>> node7l_vec = node7l.getArgs();
+//     EXPECT_EQ(node7l_vec.size(), 1);
+//     EXPECT_EQ(node7l_vec[0], node5);
+//     EXPECT_EQ(typeid(node7l), typeid(ReLUOperation));
+//
+//     IOperation& node5l = dynamic_cast<IOperation&>(*node5);
+//     std::vector<std::shared_ptr<INode>> node5l_vec = node5l.getArgs();
+//     EXPECT_EQ(node5l_vec.size(), 2);
+//     EXPECT_EQ(node5l_vec[0], node1);
+//     EXPECT_EQ(node5l_vec[1], node2);
+//     EXPECT_EQ(typeid(node5l), typeid(MatMulOperation));
+//
+//     IOperation& node6l = dynamic_cast<IOperation&>(*node6);
+//     std::vector<std::shared_ptr<INode>> node6l_vec = node6l.getArgs();
+//     EXPECT_EQ(node6l_vec.size(), 2);
+//     EXPECT_EQ(node6l_vec[0], node4);
+//     EXPECT_EQ(node6l_vec[1], node3);
+//     EXPECT_EQ(typeid(node6l), typeid(ConvolOperation));
+//
+//     IOperation& node9l = dynamic_cast<IOperation&>(*node9);
+//     std::vector<std::shared_ptr<INode>> node9l_vec = node9l.getArgs();
+//     EXPECT_EQ(node9l_vec.size(), 2);
+//     EXPECT_EQ(node9l_vec[0], node5);
+//     EXPECT_EQ(node9l_vec[1], node8);
+//     EXPECT_EQ(typeid(node9l), typeid(MatMulOperation));
+//
+//     EXPECT_EQ(root, node9);
+// }
+//

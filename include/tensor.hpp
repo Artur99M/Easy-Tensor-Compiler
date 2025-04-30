@@ -8,7 +8,6 @@ namespace etc {
 class Tensor {
 
 private:
-    private:
 
 //classes for simpler handing
     struct line {
@@ -53,7 +52,7 @@ private:
 public:
 //ctors, dtors, operator=
     Tensor() = default;
-    Tensor(unsigned N, unsigned C, unsigned H, unsigned W);
+    Tensor(const unsigned N, const unsigned C, const unsigned H, const unsigned W);
 
     Tensor(std::initializer_list<std::initializer_list<std::initializer_list<std::initializer_list<double>>>> init);
     Tensor(const Tensor& other) = default;
@@ -78,23 +77,25 @@ public:
     inline unsigned H() const {return H_;}
     inline unsigned W() const {return W_;}
 
-    void set_size(unsigned N, unsigned C, unsigned H, unsigned W);
+    void set_size(const unsigned N, const unsigned C, const unsigned H, const unsigned W);
 
 //Math operations
 public:
-    Tensor& operator+=  (const Tensor& rhs);
+    bool    operator==  (const Tensor& rhs) const;
+    bool    operator!=  (const Tensor& rhs) const;
+    Tensor& operator+=  (const Tensor& rhs)      ;
     Tensor  operator+   (const Tensor& rhs) const;
-    Tensor& operator-=  (const Tensor& rhs);
+    Tensor& operator-=  (const Tensor& rhs)      ;
     Tensor  operator-   (const Tensor& rhs) const;
-    Tensor& operator*=  (const double number);
-    Tensor& operator*=  (const Tensor& rhs);
+    Tensor& operator*=  (const Tensor& rhs)      ;
     Tensor  operator*   (const Tensor& rhs) const;
+    Tensor& operator*=  (const double  num)      ;
 
     Tensor  transpose   ()                  const;
     Tensor  ReLU        ()                  const;
-    Tensor& ReLU_self   ();
+    Tensor& ReLU_self   ()                       ;
     Tensor  softmax     ()                  const;
-    Tensor& softmax_self();
+    Tensor& softmax_self()                       ;
 
     // math functions outside the class
     // Tensor operator*(const Tensor& tensor, const double  number);
@@ -103,9 +104,10 @@ public:
 
 //Other methods
 public:
-                 std::string          dump() const;
-    inline       std::vector<double>& data()       {return data_;}
-    inline const std::vector<double>& data() const {return data_;}
+                 std::string          dump     () const;
+                 std::string          dump_init() const;
+    inline       std::vector<double>& data     ()       {return data_;}
+    inline const std::vector<double>& data     () const {return data_;}
 };
 
 Tensor operator*(const Tensor& tensor, const double  number);

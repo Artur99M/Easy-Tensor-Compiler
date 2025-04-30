@@ -6,7 +6,7 @@ class debuging {
 public:
     debuging& flush();
     template <typename T>
-    inline debuging& operator<<(T x) {
+    inline debuging& operator<<(T& x) {
         return *this;
     }
     debuging& operator<<(std::basic_ostream<char, std::char_traits<char>>& (*func)(std::basic_ostream<char, std::char_traits<char>>&));

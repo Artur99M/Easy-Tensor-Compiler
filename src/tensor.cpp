@@ -18,7 +18,7 @@ namespace etc {
 //    \\___________//         ||          \\___________//   ||            \\
 
 
-Tensor::Tensor(unsigned N, unsigned C, unsigned H, unsigned W) :
+Tensor::Tensor(const unsigned N, const unsigned C, const unsigned H, const unsigned W) :
     N_(N), C_(C), H_(H), W_(W), data_(N_ * C_ * H_ * W_) {
 }
 
@@ -215,31 +215,50 @@ Tensor Tensor::ReLU() const {
     return res.ReLU_self();
 }
 
-// Tensor& Tensor::softmax_self() {
-//
-//     for (unsigned h = 0; h < H_; ++h)
-//         for (unsigned w = 0; w < W_; ++w)
-//         for (unsigned c = 0; c < C_; ++c) {
-//             int sum = 0, sum_2 = 0;
-//             for (unsigned b = 0; b < N_; ++b) {
-//                 int x  = operator[](b)[c][h][w];
-//                 sum   += x;
-//                 sum_2 += x * x;
-//             }
-//             int E = sum / N_, E_2 = sum_2 / E, D = E_2 - E * E;
-//             if (D == 0)
-//                 throw std::runtime_error("etc::Tensor::softmax_self D == 0");
-//             for (unsigned b = 0; b < N_; ++b)
-//                 operator[](b)[c][h][w] = (operator[](b)[c][h][w] - E) / std::sqrt(D);
-//         }
-//
-// }
-//
-// Tensor Tensor::softmax() const {
-//
-//     Tensor res{*this};
-//     return res.softmax_self();
-// }
+Tensor& Tensor::softmax_self() {
+
+    for (unsigned b = 0; b < N_; ++b)
+        for (unsigned h = 0; h < H_; ++h)
+            for (unsigned w = 0; w < W_; ++w) {
+                // всё, что отмечено комментарием может быть реализовано для избежания переполнения
+                // double max_val = operator[](b)[0][h][w];
+                // for (unsigned c = 0; c < C_; ++c)
+                    // if (max_val < operator[](b)[c][h][w])
+                    //     max_val = operator[](b)[c][h][w];
+
+                double sum = 0;
+                for (unsigned c = 0; c < C_; ++c)
+                    sum += std::exp(operator[](b)[c][h][w] /*- max_val*/);
+
+                for (unsigned c = 0; c < C_; ++c) {
+                    operator[](b)[c][h][w] = std::exp(operator[](b)[c][h][w]/*- max_val*/) / sum;
+                }
+            }
+
+    return *this;
+}
+
+Tensor Tensor::softmax() const {
+
+    Tensor res{*this};
+    return res.softmax_self();
+}
+
+bool Tensor::operator==(const Tensor& rhs) const {
+
+    if (N_ != rhs.N_ || C_ != rhs.C_ || H_ != rhs.H_ || W_ != rhs.W_)
+        return false;
+
+    static constexpr double Eps = 1e-10;
+    for (size_t i = 0, sz = N_ * C_ * H_ * W_; i < sz; ++i)
+        if ((data_[i] - rhs.data_[i]) * (data_[i] - rhs.data_[i]) > Eps)
+            return false;
+
+    return true;
+}
+bool Tensor::operator!=(const Tensor& rhs) const {
+    return !operator==(rhs);
+}
 
 std::string Tensor::dump() const {
 
@@ -261,14 +280,115 @@ std::string Tensor::dump() const {
     return str.str();
 }
 
+std::string Tensor::dump_init() const {
 
-void Tensor::set_size(unsigned N, unsigned C, unsigned H, unsigned W) {
+    std::ostringstream str;
+    for (unsigned b = 0; b < N_ - 1; ++b) {
+        str << "{\n";
+        for (unsigned c = 0; c < C_ - 1; ++c) {
+            str << "{\n";
+            for (unsigned h = 0; h < H_ - 1; ++h) {
+                str << '{';
+                for (unsigned w = 0; w < W_ - 1; ++w)
+                    str << operator[](b)[c][h][w] << ", ";
+                if (W_ > 0)
+                    str << operator[](b)[c][h][W_ - 1];
+                str << "},\n";
+            }
+            if (H_ > 0) {
+                str << '{';
+                for (unsigned w = 0; w < W_ - 1; ++w)
+                    str << operator[](b)[c][H_ - 1][w] << ", ";
+                if (W_ > 0)
+                    str << operator[](b)[c][H_ - 1][W_ - 1];
+                str << "}\n";
+            }
+
+            str << "},\n";
+        }
+        if (C_ > 0) {
+            str << "{\n";
+            for (unsigned h = 0; h < H_ - 1; ++h) {
+                str << '{';
+                for (unsigned w = 0; w < W_ - 1; ++w)
+                    str << operator[](b)[C_ - 1][h][w] << ", ";
+                if (W_ > 0)
+                    str << operator[](b)[C_ - 1][h][W_ - 1];
+                str << "},\n";
+            }
+            if (H_ > 0) {
+                str << '{';
+                for (unsigned w = 0; w < W_ - 1; ++w)
+                    str << operator[](b)[C_ - 1][H_ - 1][w] << ", ";
+                if (W_ > 0)
+                    str << operator[](b)[C_ - 1][H_ - 1][W_ - 1];
+                str << "}\n";
+            }
+
+            str << "}\n";
+        }
+
+        str << "},\n";
+    }
+    if (N_ > 0) {
+        size_t b = N_ - 1;
+        str << "{\n";
+        for (unsigned c = 0; c < C_ - 1; ++c) {
+            str << "{\n";
+            for (unsigned h = 0; h < H_ - 1; ++h) {
+                str << '{';
+                for (unsigned w = 0; w < W_ - 1; ++w)
+                    str << operator[](b)[c][h][w] << ", ";
+                if (W_ > 0)
+                    str << operator[](b)[c][h][W_ - 1];
+                str << "},\n";
+            }
+            if (H_ > 0) {
+                str << '{';
+                for (unsigned w = 0; w < W_ - 1; ++w)
+                    str << operator[](b)[c][H_ - 1][w] << ", ";
+                if (W_ > 0)
+                    str << operator[](b)[c][H_ - 1][W_ - 1];
+                str << "}\n";
+            }
+
+            str << "},\n";
+        }
+        if (C_ > 0) {
+            str << "{\n";
+            for (unsigned h = 0; h < H_ - 1; ++h) {
+                str << '{';
+                for (unsigned w = 0; w < W_ - 1; ++w)
+                    str << operator[](b)[C_ - 1][h][w] << ", ";
+                if (W_ > 0)
+                    str << operator[](b)[C_ - 1][h][W_ - 1];
+                str << "},\n";
+            }
+            if (H_ > 0) {
+                str << '{';
+                for (unsigned w = 0; w < W_ - 1; ++w)
+                    str << operator[](b)[C_ - 1][H_ - 1][w] << ", ";
+                if (W_ > 0)
+                    str << operator[](b)[C_ - 1][H_ - 1][W_ - 1];
+                str << "}\n";
+            }
+
+            str << "}\n";
+        }
+
+        str << "}\n";
+    }
+
+    return str.str();
+}
+
+
+void Tensor::set_size(const unsigned N, const unsigned C, const unsigned H, const unsigned W) {
+    data_.resize(N * C * H * W);
     N_ = N;
     C_ = C;
     H_ = H;
     W_ = W;
-
-    data_.resize(N * C * H * W);
 }
 
 } //namespace etc

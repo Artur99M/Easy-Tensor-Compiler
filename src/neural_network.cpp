@@ -1,55 +1,76 @@
 #include "neural_network.hpp"
-#include <unordered_set>
+#include <deque>
+#include <memory>
+#include <sstream>
+#include <typeinfo>
+#include <iostream>
 #include <stack>
-
+#include <tuple>
+#include "debug.hpp"
 
 namespace etc {
 
-std::shared_ptr<IOperation> NeuralNetwork::addOp(std::shared_ptr<IOperation> op) {
+const std::shared_ptr<IOperation>& NeuralNetwork::addOp(const std::shared_ptr<IOperation>& op) {
+
+    if (infer_ == nullptr) {
+        infer_ = op;
+        return op;
+    }
+
+    for (auto& i : op->getArgs())
+        if (i == infer_) {
+            infer_ = op;
+            break;
+        }
+
     return op;
 }
 
-void NeuralNetwork::set_infer(const std::shared_ptr<INode>& infer) {
-    infer_ = infer;
-}
+const Tensor& NeuralNetwork::infer() {
 
-Tensor NeuralNetwork::infer() {
-    std::stack<std::shared_ptr<INode>> stk;
+    if (!infer_->solved()) {
 
-    // reducing recursion to a loop
-    std::unordered_set<size_t> infers;
-    std::stack<std::shared_ptr<INode>> stk_bypass;
+        //here I tried to avoid recursive call
+        // if true: node was visited
+        std::stack<std::pair<IOperation*, bool>> stk;
+        if (infer_->is_operation())
+            stk.push(std::make_pair(reinterpret_cast<IOperation*>(infer_.get()), false));
 
-    stk_bypass.push(root_);
-    infers.emplace(static_cast<size_t>(root_.get());
+        //Post Order if we consider infer_ is root
+        while (!stk.empty()) {
+            std::pair<IOperation*, bool>& top = stk.top();
 
-    INode* cur = root_;
-    while (!stk_bypass.empty()) {
-        bool find = false;
-        for (INode* x : stk_bypass.top()->children()) {
-            if (!infers.find(x)) {
-                infers.emplace(static_cast<size_t>(x));
-                stk_bypass.push(cur);
-                cur = x;
-                find = true;
+            if (top.second == true) { // if node was visited but maybe hasn't be solved
+                top.first->evaluate();
+                stk.pop();
+            } else { // node wasn't visited => it's clildren wasn't visited too
+                top.second = true;
+                std::vector<std::shared_ptr<INode>> args = top.first->getArgs();
+
+                for (auto& i : args)
+                    if (i->is_operation())
+                        stk.push(std::make_pair(reinterpret_cast<IOperation*>(i.get()), false));
             }
-        }
 
-        if (!find) {
-            stk.push(cur);
-            if (stk_bypass.size() == 0)
-                break;
-            cur = stk_bypass.top().get();
-            stk_bypass.pop();
         }
-    }
-
-    while (!stk.empty()) {
-        stk.top()->evaluate();
-        stk.pop();
     }
 
     return infer_->evaluate();
 }
 
+std::string NeuralNetwork::dump_graph() const {
+
+    std::ostringstream str;
+    str << "digraph G {\n" << infer_->dump() << " -> OUTPUT\n}"; // recursive call
+    return str.str();
+}
+
+
+std::shared_ptr<INode>& NeuralNetwork::infer_node() {
+    return infer_;
+}
+
+const std::shared_ptr<INode>& NeuralNetwork::infer_node() const {
+    return infer_;
+}
 } //namespace etc
