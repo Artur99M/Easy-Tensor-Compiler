@@ -61,7 +61,7 @@ const Tensor& NeuralNetwork::infer() {
 std::string NeuralNetwork::dump_graph() const {
 
     std::ostringstream str;
-    str << "digraph G {\n" << infer_->dump() << " -> OUTPUT\n}"; // recursive call
+    str << "digraph G {\n" << infer_->dump() << " -> OUTPUT\n}";
     return str.str();
 }
 

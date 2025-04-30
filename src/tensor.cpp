@@ -159,6 +159,7 @@ Tensor Tensor::operator*(const Tensor& rhs) const {
 
 Tensor Tensor::transpose() const {
 
+    //(N, C, H, W) -> (N, C, W, H)
     Tensor T(N_, C_, W_, H_);
     for (unsigned b = 0; b < N_; ++b)
         for (unsigned c = 0; c < C_; ++c) {

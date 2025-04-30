@@ -21,6 +21,7 @@ public:
     virtual        const Tensor&     evaluate    () const = 0;
     virtual inline       bool        solved      () const = 0;
     virtual inline       bool        is_operation() const    ;
+    virtual inline       bool        is_number   () const    ;
     virtual              std::string dump        () const = 0;
 };
 
@@ -53,10 +54,11 @@ private:
 public:
     INumber(double);
 public:
-    double        val     () const;
-    const Tensor& evaluate() const override;
-    inline bool   solved  () const override;
-    std::string   dump    () const override;
+    double        val      () const;
+    const Tensor& evaluate () const override;
+    inline bool   solved   () const override;
+    inline bool   is_number() const override;
+    std::string   dump     () const override;
 };
 
 //IOperation
@@ -187,6 +189,13 @@ inline bool IOperation::is_operation() const {
     return true;
 }
 
+inline bool INode::is_number() const {
+    return false;
+}
+
+inline bool INumber::is_number() const {
+    return true;
+}
 
 inline bool IWeight::solved() const {
     return true;

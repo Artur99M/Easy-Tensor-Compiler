@@ -23,15 +23,10 @@ target_compile_features(${exec} PUBLIC cxx_std_17)
 target_include_directories(${exec} PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(${exec} PRIVATE ETClib)
 
-include(CTest)
-enable_testing()
 
-file(GLOB testfiles "${CMAKE_SOURCE_DIR}/tests/*.dat")
-foreach(file ${testfiles})
-    add_test (NAME ${file}
-        COMMAND python3 ${CMAKE_SOURCE_DIR}/tests/test.py ${CMAKE_SOURCE_DIR} ${file})
-    set_tests_properties(${file} PROPERTIES DEPENDS ${exec})
-endforeach()
-
-add_subdirectory(${CMAKE_SOURCE_DIR}/tests/unit_tests)
-add_subdirectory(${CMAKE_SOURCE_DIR}/tests/end2end)
+option(BUILD_TESTS OFF)
+if (BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(${CMAKE_SOURCE_DIR}/tests/unit_tests)
+    add_subdirectory(${CMAKE_SOURCE_DIR}/tests/end2end)
+endif()

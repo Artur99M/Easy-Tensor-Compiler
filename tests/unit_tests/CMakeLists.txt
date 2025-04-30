@@ -1,8 +1,6 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.19)
 project(UnitTest)
 
-include(CTest)
-enable_testing()
 # Автоматическая загрузка GoogleTest
 find_package(GTest REQUIRED)
 if(NOT GTest)
@@ -33,6 +31,8 @@ else()
   target_link_libraries(tests PUBLIC GTest::gtest GTest::gtest_main)
 endif()
 
+include(CTest)
+enable_testing()
 add_test(NAME UNIT_TESTS
          CONFIGURATIONS unit
-         COMMAND tests)
+         COMMAND ${CMAKE_CURRENT_BINARY_DIR}/tests)

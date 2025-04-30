@@ -74,7 +74,6 @@ with open(real, 'r') as realf, open(ref, 'r') as reff:
     ref_str = reff.read()
     tensor_ref = str_to_tensor(ref_str)
 
-print("bark")
 subprocess.run(['dot', '-Tsvg', dot, '-o', real_svg])
 svg_cmp = compare_svg_structure(real_svg, ref_svg)
 # Удаление временного файла
@@ -83,6 +82,7 @@ os.remove(dot)
 os.remove(real_svg)
 
 # Сравнение содержимого
+print("svg_cmp = ", svg_cmp)
 if np.array_equal(tensor_ref, tensor_real) and svg_cmp:
     print("Files match.")
     sys.exit(0)

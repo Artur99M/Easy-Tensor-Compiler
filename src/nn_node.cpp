@@ -4,6 +4,7 @@
 #include <iostream>
 #include <typeinfo>
 #include <sstream>
+#include <deque>
 
 namespace etc {
 
@@ -58,11 +59,28 @@ std::string INumber::dump() const {
 std::string IOperation::dump() const {
     std::ostringstream str;
 
-    for (const std::shared_ptr<INode>& i : getArgs()) {
-        str << i->dump() <<  " -> \"" << str_type() << '\n' << this << "\"\n";
+    std::deque<std::pair<const IOperation*, size_t>> deq;
+    size_t it = 0;
+    deq.push_front(std::make_pair(this, it));
+
+    while (!deq.empty()) {
+        auto front = deq.front(); //copy for non invalidtion
+        auto vec = front.first->getArgs();
+
+        for (auto& i : vec) {
+            if (i->is_operation()) {
+                deq.push_back(std::make_pair(reinterpret_cast<const IOperation*>(i.get()), ++it));
+                str << '\"' << dynamic_cast<IOperation&>(*i).str_type() << '\n' << it << '\"' ;
+            } else
+                str << i->dump();
+
+            str << " -> \"" << front.first->str_type() << '\n' << front.second << "\"\n";
+        }
+        deq.pop_front();
+
     }
 
-    str << '\"' << str_type() << '\n' << this << "\"\n";
+    str << '\"' << str_type() << '\n' << 0 << '\"';
 
     return str.str();
 }
@@ -179,12 +197,12 @@ void ScalarMulOperation::setArgs(const std::vector<std::shared_ptr<INode>>& args
     if (args.size() != 2)
         throw std::range_error("etc::BinaryOperation::setArgs args.size() != 2");
 
-    if (typeid(*(args[0])) == typeid(INumber)) {
+    if (args[0]->is_number() && !(args[1]->is_number())) {
         number_ = dynamic_cast<const INumber&>(*(args[0])).val();
         rhs_    = args[0];
         lhs_    = args[1];
 
-    } else if (typeid(*(args[1])) == typeid(INumber)) {
+    } else if (args[1]->is_number() && !(args[0]->is_number())) {
         number_ = dynamic_cast<const INumber&>(*(args[0])).val();
         lhs_    = args[0];
         rhs_    = args[1];
